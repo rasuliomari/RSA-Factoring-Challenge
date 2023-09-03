@@ -1,41 +1,49 @@
 #!/usr/bin/env bash
-# This is a factors challenge
+# is a factors challenge
 
-check_factor() {
-    if [ $# -ne 1 ]; then
-        echo "Usage: check_factor <number>"
-        exit 1
-    fi
-
-    factors=$(factor "$1" | awk '{$1=""; print $0}' | sed 's/ //g')
-    factors_array=($factors)
-
-    if [ ${#factors_array[@]} -eq 1 ]; then
-        echo "$1=1*$1"
-    else
-        max_factor=${factors_array[-1]}
-        second_max_factor=${factors_array[-2]}
-
-        if [ ${#factors_array[@]} -gt 2 ]; then
-            for ((i=${#factors_array[@]}-3; i>=0; i--)); do
-                if [ $(echo "${factors_array[$i]}*$second_max_factor" | bc) -gt $(echo "$max_factor*${
-factors_array[$i+1]}" | bc) ]; then
-                    break
-                fi
-
-                second_max_factor=${factors_array[$i]}
-            done
+check_factor()
+{
+	if [ $# -ne 3 ];
+        then
+                args=("$@")
+                count=0
+                num2=1
+                for a in ${args[*]};
+                do
+                        if [ $count -gt 1 ];
+                        then
+                                num2=$(echo $a*$num2 | bc)
+                        fi
+                        count=$((count + 1))
+                done
+        else
+                num2=$3
         fi
 
-        echo "$1=$max_factor*$second_max_factor"
-    fi
+        num1=$2
+        num=$(echo "$1" | tr ':' '=')
+
+        result=$(echo "if($num2 > $num1) 1 else 0" | bc)
+	        if ((result == 1)); then
+		        numcp=$num1
+		        num1=$num2
+		        num2=$numcp
+                fi
+
+        echo "$num$num1*$num2"
 }
 
-if [ $# -ne 1 ]; then
-    echo 'Usage: factors <file>'
-    exit 1
+if [ $# -ne 1 ]
+then
+        echo 'Usage: factors <file>'
+        exit 1
 else
-    while read -r number; do
-        check_factor "$number"
-    done < "$1"
+
+        while read i
+        do
+
+                result=$(factor "$i")
+                check_factor $result
+
+        done < "$1"
 fi
